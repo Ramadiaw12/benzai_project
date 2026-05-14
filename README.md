@@ -29,6 +29,42 @@
 
 <br/>
 
+---
+
+## 🏥 Description du projet
+
+**OrientaMed** est une application intelligente de simulation d'un workflow d'orientation clinique médicale. Elle repose sur une architecture **multi-agents** orchestrée par **LangGraph**, où plusieurs agents IA collaborent pour accompagner un patient de la saisie de ses symptômes jusqu'à la génération d'un rapport médical final validé par un médecin humain.
+
+Le système simule un parcours clinique complet en 4 étapes :
+
+- 🧑‍💼 **Le patient** décrit ses symptômes et répond à 5 questions ciblées posées par l'Agent Diagnostic
+- 🤖 **L'Agent Diagnostic** analyse les réponses, extrait les symptômes et produit une synthèse clinique préliminaire
+- 🧑‍⚕️ **Le médecin traitant** valide ou corrige la synthèse (Human-in-the-Loop obligatoire)
+- 📄 **L'Agent Rapport** génère un rapport médical final structuré
+
+Le tout est exposé via une **API FastAPI**, intégré avec le protocole **MCP**, connecté à une interface **Vanilla JS** responsive et déployable via **Docker**.
+
+<br/>
+
+---
+
+## 👩‍💻 Équipe du projet
+
+<br/>
+
+| | Nom | Rôle |
+|:---:|---|---|
+| 🔵 | **Stécy Mombo Azzile** | Étudiant 1 — Chef d'orchestre · State & Graphe LangGraph |
+| 🟢 | **Audès Mariana Moussavou** | Étudiant 2 — Agent Diagnostic · Outils MCP |
+| 🟠 | **Ramatoulaye Diawara** | Étudiant 3 — Médecin & Rapport · API FastAPI |
+| 🟡 | **Awa Aimée Benzekry** | Étudiant 4 — Frontend & DevOps · Docker · README |
+
+<br/>
+
+**Encadrant :** Pr. Mohamed YOUSSFI · ENSET · 2025–2026
+
+<br/>
+
 </div>
 
 ---
