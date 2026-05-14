@@ -1,0 +1,86 @@
+version: "3.9"
+
+# ══════════════════════════════════════════════════════════════════════
+#  docker-compose.yml — Système Multi-Agents Médical
+#  Étudiant 4 — Frontend & DevOps
+#
+#  Services :
+#    • backend  — FastAPI + LangGraph (port 8000)
+#    • mcp      — Serveur MCP         (port 8001)
+#    • frontend — Nginx + index.html  (port 3000)
+#
+#  Usage :
+#    docker-compose up --build          # démarrer tout
+#    docker-compose up backend mcp      # backend only
+#    docker-compose down                # arrêter
+#    docker-compose logs -f backend     # logs en direct
+# ══════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── Backend FastAPI + LangGraph ─────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mediagraph-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MCP_SERVER_URL=http://mcp:8001
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mcp
+    networks:
+      - mediagraph-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ── Serveur MCP ─────────────────────────────────────────────────────
+  mcp:
+    build:
+      context: ./mcp_server
+      dockerfile: Dockerfile
+    container_name: mediagraph-mcp
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./mcp_server:/app
+    networks:
+      - mediagraph-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Frontend Nginx ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mediagraph-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - mediagraph-net
+    restart: unless-stopped
+
+networks:
+  mediagraph-net:
+    driver: bridge
