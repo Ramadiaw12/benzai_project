@@ -37,7 +37,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 # ── Import du state partagé (défini par l'Étudiant 1) ────────────────────────
 # MedicalState est le contrat de données central du projet.
 # Tous les agents lisent et écrivent dans ce même état partagé.
-from state import MedicalState
+from app.state import MedicalState
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

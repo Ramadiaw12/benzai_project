@@ -38,7 +38,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 # ── Import du state partagé (défini par l'Étudiant 1) ────────────────────────
-from state import MedicalState
+from app.state import MedicalState
 
 # ── Utilitaires Python ────────────────────────────────────────────────────────
 from datetime import datetime

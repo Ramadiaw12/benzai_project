@@ -1,21 +1,15 @@
 #Stécy
 
+
 from typing import Literal
 from langgraph.graph import StateGraph, START, END
-from state import MedicalState
-
-
-# [CORRECTION E3] — MemorySaver obligatoire pour interrupt() (HITL)
 from langgraph.checkpoint.memory import MemorySaver
- 
-# Import du state partagé — MedicalState de Stécy
+
 from app.state import MedicalState
- 
-# [CORRECTION E3] — Imports corrects pour la structure du projet
 from app.nodes.physician_review import physician_review_node
 from app.nodes.report_agent     import report_agent_node
-from app.nodes.diagnostic_agent import diagnostic_agent_node
- 
+from app.nodes.diagnostic_agent import diagnostic_node as diagnostic_agent_node
+
 # ==========================================
 # 1. LOGIQUE DE ROUTAGE 
 # ==========================================

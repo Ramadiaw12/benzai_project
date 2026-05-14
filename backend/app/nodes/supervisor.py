@@ -74,7 +74,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
 # ── Import du state partagé (défini par l'Étudiant 1) ────────────────────────
-from state import MedicalState
+from app.state import MedicalState
 
 # ── Utilitaires ───────────────────────────────────────────────────────────────
 from dotenv import load_dotenv
@@ -316,7 +316,7 @@ Quelle est la prochaine étape du workflow ?
 
     # Validation : si le LLM répond n'importe quoi → fallback déterministe
     if decision not in VALID_DECISIONS:
-        print(f"  [Supervisor] Réponse LLM invalide : '{decision}' — fallback déterministe.")
+        print(f"      [Supervisor] Réponse LLM invalide : '{decision}' — fallback déterministe.")
         decision = _fallback_routing(state)
 
     return decision
