@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OrientaMed — Système Multi-Agents Clinique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ══════════════════════════════════════════════
+       PALETTE MÉDICALE — Vert / Blanc / Gris clinique
+    ══════════════════════════════════════════════ */
+    :root {
+      --green-50:  #EAF7F0;
+      --green-100: #C0E8D4;
+      --green-200: #80CFA9;
+      --green-500: #1D9E75;
+      --green-600: #0F6E56;
+      --green-700: #085041;
+      --green-800: #04342C;
+
+      --bg:        #F4F7F5;
+      --surface:   #FFFFFF;
+      --surface2:  #F0F5F2;
+      --border:    #D4E6DC;
+      --border2:   #B0CEC0;
+
+      --text:      #0F2B22;
+      --muted:     #4A7060;
+      --dim:       #8AADA0;
+
+      --red:       #D93025;
+      --reddim:    #FDF0EF;
+      --redborder: #F5C6C2;
+      --amber:     #B85C00;
+      --amberdim:  #FEF6E8;
+
+      --r:         12px;
+      --rs:        8px;
+      --shadow:    0 2px 12px rgba(15,107,86,.08);
+      --shadow-md: 0 4px 24px rgba(15,107,86,.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, textarea, button, select { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+
+    /* ══════════════════════════════════════════════
+       TOP BAR
+    ══════════════════════════════════════════════ */
+    header {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 36px; height: 62px;
+      background: var(--green-600);
+      box-shadow: 0 2px 8px rgba(15,110,86,.3);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-cross {
+      width: 34px; height: 34px; background: #fff; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .logo-name {
+      font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800;
+      color: #fff; letter-spacing: -.01em;
+    }
+    .logo-tag {
+      font-size: .7rem; color: rgba(255,255,255,.7);
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    #mock-badge {
+      display: none; font-size: .68rem; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
+      background: var(--amberdim); border: 1px solid #F0C070; color: var(--amber);
+    }
+    #thread-pill {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+      padding: 6px 14px; border-radius: 20px; font-size: .78rem; color: rgba(255,255,255,.8);
+    }
+    #thread-pill span { color: #fff; font-weight: 600; font-family: monospace; }
+
+    /* ══════════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════════ */
+    main { max-width: 880px; margin: 0 auto; padding: 36px 24px 80px; }
+
+    /* ══════════════════════════════════════════════
+       STEPPER
+    ══════════════════════════════════════════════ */
+    .stepper {
+      display: flex; align-items: center; margin-bottom: 36px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 28px;
+      box-shadow: var(--shadow);
+    }
+    .step-item { display: flex; align-items: center; flex: 1; }
+    .step-item:last-child { flex: 0; }
+    .step-circle {
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; font-weight: 600;
+      background: var(--surface2); border: 2px solid var(--border2); color: var(--dim);
+      transition: all .3s;
+    }
+    .step-circle.active { background: var(--green-500); border-color: var(--green-500); color: #fff; box-shadow: 0 0 0 4px var(--green-50); }
+    .step-circle.done   { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+    .step-label { font-size: .72rem; font-weight: 500; color: var(--dim); margin-left: 8px; white-space: nowrap; }
+    .step-label.active { color: var(--green-600); font-weight: 600; }
+    .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 10px; border-radius: 2px; transition: background .3s; }
+    .step-line.done { background: var(--green-500); }
+
+    /* ══════════════════════════════════════════════
+       SCREENS
+    ══════════════════════════════════════════════ */
+    .screen { display: none; animation: fadeUp .35s ease both; }
+    .screen.active { display: block; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    .screen-header { margin-bottom: 24px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .68rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 12px;
+      color: var(--green-700); background: var(--green-50); border: 1px solid var(--green-100);
+    }
+    .badge.doc { color: #184EA8; background: #EBF1FC; border-color: #B8D0F5; }
+    .badge.rep { color: var(--green-800); background: var(--green-50); border-color: var(--green-200); }
+    .screen-header h2 {
+      font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800;
+      color: var(--text); letter-spacing: -.02em; line-height: 1.1; margin-bottom: 8px;
+    }
+    .screen-header p { color: var(--muted); font-size: .92rem; line-height: 1.6; }
+    .accent { color: var(--green-500); font-weight: 600; }
+
+    /* ══════════════════════════════════════════════
+       CARD
+    ══════════════════════════════════════════════ */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 28px; box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: .75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--muted); margin-bottom: 14px;
+    }
+
+    /* ══════════════════════════════════════════════
+       FORM
+    ══════════════════════════════════════════════ */
+    .form-row { display: flex; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 7px; flex: 1; margin-bottom: 18px; }
+    .field.sm { flex: 0 0 100px; }
+    .field.xs { flex: 0 0 130px; }
+    label { font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    input, textarea, select {
+      background: var(--surface); border: 1.5px solid var(--border2);
+      border-radius: var(--rs); color: var(--text); padding: 11px 14px; font-size: .93rem;
+      outline: none; width: 100%; resize: vertical; transition: border-color .2s, box-shadow .2s;
+    }
+    input::placeholder, textarea::placeholder { color: var(--dim); }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--green-500);
+      box-shadow: 0 0 0 3px var(--green-50);
+    }
+    select option { background: var(--surface); }
+
+    /* ══════════════════════════════════════════════
+       BUTTONS
+    ══════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; border-radius: var(--rs); font-weight: 600; font-size: .9rem;
+      transition: all .2s; white-space: nowrap; width: 100%;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: var(--green-500); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--green-600); box-shadow: 0 4px 14px rgba(15,110,86,.3); transform: translateY(-1px); }
+    .btn-doc { background: #2563EB; color: #fff; }
+    .btn-doc:hover:not(:disabled) { background: #1D4ED8; transform: translateY(-1px); }
+    .btn-danger { background: var(--reddim); border: 1.5px solid var(--redborder); color: var(--red); }
+    .btn-danger:hover:not(:disabled) { background: #FAE0DE; }
+    .btn-sec { background: var(--surface); border: 1.5px solid var(--border2); color: var(--text); width: auto; }
+    .btn-sec:hover { border-color: var(--green-500); color: var(--green-600); }
+
+    /* ══════════════════════════════════════════════
+       DISCLAIMER
+    ══════════════════════════════════════════════ */
+    .disclaimer {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: var(--reddim); border: 1.5px solid var(--redborder);
+      border-radius: var(--rs); padding: 12px 16px;
+      font-size: .78rem; color: #8B2020; margin-bottom: 20px; line-height: 1.5;
+    }
+
+    /* ══════════════════════════════════════════════
+       CHAT (Screen 2)
+    ══════════════════════════════════════════════ */
+    #chat-card { display: flex; flex-direction: column; height: 510px; padding: 0; overflow: hidden; }
+    .q-progress { display: flex; gap: 6px; padding: 16px 22px 0; }
+    .q-dot { flex: 1; height: 5px; border-radius: 3px; background: var(--border); transition: background .4s; }
+    .q-dot.done    { background: var(--green-500); }
+    .q-dot.current { background: var(--green-200); }
+    #chat-window {
+      flex: 1; overflow-y: auto; padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 14px;
+      scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+    }
+    .bubble { max-width: 78%; display: flex; flex-direction: column; gap: 5px; animation: fadeUp .25s ease; }
+    .bubble.agent  { align-self: flex-start; }
+    .bubble.patient{ align-self: flex-end; }
+    .bubble-author { font-size: .66rem; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: .06em; }
+    .bubble.patient .bubble-author { text-align: right; }
+    .bubble p {
+      border-radius: 14px; padding: 12px 16px;
+      font-size: .91rem; line-height: 1.6; color: var(--text);
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .bubble.agent p  { background: var(--green-50); border-color: var(--green-100); color: var(--green-800); border-bottom-left-radius: 4px; }
+    .bubble.patient p{ background: var(--green-600); color: #fff; border: none; border-bottom-right-radius: 4px; }
+    .bubble.patient .bubble-author { color: var(--muted); }
+    .bubble.typing p { color: var(--dim); display: flex; align-items: center; gap: 10px; }
+    .chat-bar {
+      display: flex; gap: 12px; padding: 14px 18px;
+      border-top: 1px solid var(--border); background: var(--surface2);
+    }
+    #chat-input { flex: 1; resize: none; border-radius: var(--rs); padding: 10px 14px; }
+    #send-btn   { width: auto; flex-shrink: 0; padding: 10px 20px; }
+
+    /* ══════════════════════════════════════════════
+       PHYSICIAN (Screen 3)
+    ══════════════════════════════════════════════ */
+    .phy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 680px) { .phy-grid { grid-template-columns: 1fr; } }
+    #summary-text { font-size: .9rem; color: var(--muted); line-height: 1.75; white-space: pre-wrap; }
+    .symptom-tag {
+      display: inline-block; background: var(--green-50); border: 1px solid var(--green-100);
+      color: var(--green-700); padding: 4px 12px; border-radius: 20px; font-size: .78rem; font-weight: 500;
+    }
+    #symptoms-list { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+    #interim-box {
+      display: none; margin-top: 16px;
+      background: #EBF1FC; border: 1.5px solid #B8D0F5;
+      border-radius: var(--rs); padding: 14px;
+      font-size: .88rem; color: #1A3F8F; line-height: 1.65; white-space: pre-wrap;
+    }
+    #physician-form { display: flex; flex-direction: column; gap: 14px; }
+    #physician-notes { min-height: 160px; }
+    .phy-btns { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ══════════════════════════════════════════════
+       REPORT (Screen 4)
+    ══════════════════════════════════════════════ */
+    .report-topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+    }
+    .r-label { display: block; font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin-bottom: 4px; }
+    .r-val   { font-family: monospace; font-size: .82rem; color: var(--text); }
+    .r-status {
+      background: var(--green-50); border: 1.5px solid var(--green-200);
+      color: var(--green-700); padding: 6px 16px; border-radius: 20px;
+      font-size: .78rem; font-weight: 600;
+    }
+    .r-section { margin-bottom: 26px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+    .r-section:last-of-type { border-bottom: none; }
+    .r-section h3 {
+      font-size: .75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--green-600); margin-bottom: 10px;
+    }
+    .r-section p { font-size: .91rem; color: var(--muted); line-height: 1.75; white-space: pre-wrap; }
+    .symptoms-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .r-disclaimer {
+      text-align: center; font-size: .78rem; color: #8B2020;
+      background: var(--reddim); border: 1.5px solid var(--redborder);
+      border-radius: var(--rs); padding: 14px; margin-top: 20px;
+    }
+    .report-actions { display: flex; gap: 14px; justify-content: flex-end; margin-top: 20px; }
+
+    /* ══════════════════════════════════════════════
+       ERROR
+    ══════════════════════════════════════════════ */
+    #error-banner {
+      display: none; align-items: center; justify-content: space-between;
+      background: var(--reddim); border: 1.5px solid var(--redborder);
+      border-radius: var(--rs); padding: 12px 18px;
+      color: var(--red); font-size: .86rem; margin-bottom: 20px;
+    }
+    #error-banner button { color: var(--red); font-size: 1.1rem; }
+
+    /* ══════════════════════════════════════════════
+       SPINNER
+    ══════════════════════════════════════════════ */
+    .spin {
+      width: 14px; height: 14px; flex-shrink: 0;
+      border: 2px solid rgba(0,0,0,.1); border-top-color: currentColor;
+      border-radius: 50%; animation: rot .7s linear infinite; display: inline-block;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+
+    /* ══════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════ */
+    footer {
+      text-align: center; padding: 20px; font-size: .72rem;
+      color: var(--dim); border-top: 1px solid var(--border);
+    }
+    footer .warn { color: var(--red); font-weight: 500; }
+
+    /* ══════════════════════════════════════════════
+       PRINT
+    ══════════════════════════════════════════════ */
+    @media print {
+      header, .stepper, .report-actions, footer, #mock-badge { display: none !important; }
+      body { background: #fff; }
+      .card { box-shadow: none; }
+    }
+    @media (max-width: 600px) {
+      header { padding: 0 16px; } .logo-tag { display: none; }
+      main { padding: 20px 14px 60px; } .stepper { padding: 14px 16px; }
+      .step-label { display: none; } .screen-header h2 { font-size: 1.5rem; }
+      .form-row { flex-direction: column; } .field.sm, .field.xs { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="logo">
+    <div class="logo-cross">⚕</div>
+    <span class="logo-name">OrientaMed</span>
+    <span class="logo-tag">Système Multi-Agents Clinique</span>
+  </div>
+  <div class="header-right">
+    <div id="mock-badge">⚡ Mode Démo</div>
+    <div id="thread-pill">Consultation&nbsp;<span id="thread-display">—</span></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- STEPPER -->
+  <nav class="stepper">
+    <div class="step-item">
+      <div class="step-circle active" id="sc1">1</div>
+      <span class="step-label active" id="sl1">Patient</span>
+      <div class="step-line" id="line1"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle" id="sc2">2</div>
+      <span class="step-label" id="sl2">Diagnostic</span>
+      <div class="step-line" id="line2"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle" id="sc3">3</div>
+      <span class="step-label" id="sl3">Médecin</span>
+      <div class="step-line" id="line3"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-circle" id="sc4">4</div>
+      <span class="step-label" id="sl4">Rapport</span>
+    </div>
+  </nav>
+
+  <div id="error-banner">
+    <span id="error-msg"></span>
+    <button onclick="closeError()">✕</button>
+  </div>
+
+  <!-- ═══ SCREEN 1 — Saisie Patient ═══ -->
+  <section class="screen active" id="s1">
+    <div class="screen-header">
+      <div class="badge">⚕ Nouveau cas clinique</div>
+      <h2>Informations patient</h2>
+      <p>Renseignez le cas clinique pour initier le workflow de diagnostic multi-agents.</p>
+    </div>
+    <div class="card" style="max-width:700px">
+      <div class="form-row">
+        <div class="field sm">
+          <label>Âge</label>
+          <input type="number" id="p-age" placeholder="42" min="0" max="120" />
+        </div>
+        <div class="field xs">
+          <label>Genre</label>
+          <select id="p-gender">
+            <option value="">Non précisé</option>
+            <option value="Homme">Homme</option>
+            <option value="Femme">Femme</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Antécédents médicaux</label>
+        <input type="text" id="p-history" placeholder="Ex : diabète, hypertension, asthme… (séparés par virgules)" />
+      </div>
+      <div class="field">
+        <label>Médicaments en cours</label>
+        <input type="text" id="p-meds" placeholder="Ex : metformine, oméprazole… (séparés par virgules)" />
+      </div>
+      <div class="field">
+        <label>Description des symptômes <span style="color:var(--red)">*</span></label>
+        <textarea id="p-case" rows="5"
+          placeholder="Décrivez précisément vos symptômes, leur durée, leur intensité et le contexte d'apparition… (minimum 10 caractères)"></textarea>
+      </div>
+      <div class="disclaimer">
+        <span style="font-size:1rem;flex-shrink:0">⚠️</span>
+        Ce système est un outil d'orientation clinique préliminaire à usage académique uniquement.
+        Il ne remplace pas une consultation médicale professionnelle.
+      </div>
+      <button class="btn btn-primary" id="start-btn" onclick="startConsultation()">
+        Démarrer la consultation →
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══ SCREEN 2 — Questions / Réponses ═══ -->
+  <section class="screen" id="s2">
+    <div class="screen-header">
+      <div class="badge">🩺 Agent Diagnostic</div>
+      <h2>Questions cliniques</h2>
+      <p>Question <strong class="accent" id="q-num">1</strong> / 5 — Répondez aussi précisément que possible.</p>
+    </div>
+    <div class="card" id="chat-card">
+      <div class="q-progress">
+        <div class="q-dot current" id="qdot1"></div>
+        <div class="q-dot" id="qdot2"></div>
+        <div class="q-dot" id="qdot3"></div>
+        <div class="q-dot" id="qdot4"></div>
+        <div class="q-dot" id="qdot5"></div>
+      </div>
+      <div id="chat-window"></div>
+      <div class="chat-bar">
+        <textarea id="chat-input" rows="2" placeholder="Votre réponse… (Entrée pour envoyer)"></textarea>
+        <button class="btn btn-primary" id="send-btn" onclick="sendAnswer()" style="width:auto;padding:10px 20px">Envoyer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCREEN 3 — Revue Médecin (HITL) ═══ -->
+  <section class="screen" id="s3">
+    <div class="screen-header">
+      <div class="badge doc">👨‍⚕️ Validation Médecin — Human in the Loop</div>
+      <h2>Revue clinique</h2>
+      <p>Examinez la synthèse et saisissez votre traitement, ou refusez pour demander une correction.</p>
+    </div>
+    <div class="phy-grid">
+      <div class="card">
+        <div class="card-title">📋 Synthèse clinique préliminaire</div>
+        <p id="summary-text">Chargement…</p>
+        <div id="symptoms-list"></div>
+        <div id="interim-box"></div>
+      </div>
+      <div class="card" id="physician-form">
+        <div class="card-title">✍️ Décision du médecin traitant</div>
+        <textarea id="physician-notes" rows="7"
+          placeholder="Ex : Amoxicilline 1g × 2/j pendant 7 jours, repos, réévaluation à J+3 si aggravation…"></textarea>
+        <div class="disclaimer">
+          <span style="font-size:1rem;flex-shrink:0">⚠️</span>
+          Votre décision sera intégrée dans le rapport final. Ce champ représente la validation humaine obligatoire du workflow.
+        </div>
+        <div class="phy-btns">
+          <button class="btn btn-primary" id="validate-btn" onclick="submitPhysician(true)">
+            ✅ Valider et générer le rapport
+          </button>
+          <button class="btn btn-danger" id="refuse-btn" onclick="submitPhysician(false)">
+            ↩ Refuser — demander une correction
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCREEN 4 — Rapport Final ═══ -->
+  <section class="screen" id="s4">
+    <div class="screen-header">
+      <div class="badge rep">✅ Rapport généré</div>
+      <h2>Rapport médical final</h2>
+      <p>Synthèse complète du workflow clinique multi-agents OrientaMed.</p>
+    </div>
+    <div class="card" id="report-card">
+      <div class="report-topbar">
+        <div>
+          <span class="r-label">ID Consultation</span>
+          <span class="r-val" id="rep-thread">—</span>
+        </div>
+        <div class="r-status">✓ Consultation complétée</div>
+      </div>
+      <div class="r-section">
+        <h3>📋 Synthèse Diagnostique</h3>
+        <p id="rep-summary">—</p>
+      </div>
+      <div class="r-section">
+        <h3>🔍 Symptômes identifiés</h3>
+        <div class="symptoms-wrap" id="rep-symptoms"></div>
+      </div>
+      <div class="r-section">
+        <h3>💊 Recommandation Intermédiaire</h3>
+        <p id="rep-interim">—</p>
+      </div>
+      <div class="r-section">
+        <h3>👨‍⚕️ Traitement — Médecin Traitant</h3>
+        <p id="rep-physician">—</p>
+      </div>
+      <div class="r-section">
+        <h3>📄 Rapport Final</h3>
+        <p id="rep-final">—</p>
+      </div>
+      <div class="r-disclaimer">
+        ⚕ Ce système ne remplace pas une consultation médicale. Document généré à des fins académiques uniquement.
+      </div>
+    </div>
+    <div class="report-actions">
+      <button class="btn btn-sec" onclick="window.print()">🖨 Imprimer / PDF</button>
+      <button class="btn btn-primary" onclick="restart()" style="width:auto;padding:12px 24px">+ Nouvelle consultation</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  OrientaMed · Système Multi-Agents · LangGraph + FastAPI + Vanilla JS ·
+  <span class="warn">Ne remplace pas une consultation médicale</span>
+</footer>
+
+<script>
+const API_BASE = "http://localhost:8000";
+
+let APP = { screen:1, threadId:null, qIndex:0, isMock:false, lastNotes:"" };
+
+const MOCK_Q = [
+  "Depuis combien de temps présentez-vous ces symptômes ? Sont-ils apparus brutalement ou progressivement ?",
+  "Pouvez-vous localiser la douleur et l'évaluer sur une échelle de 1 à 10 ?",
+  "Avez-vous de la fièvre, des frissons ou des sueurs nocturnes ?",
+  "Prenez-vous des médicaments ? Avez-vous des antécédents médicaux significatifs ?",
+  "Avez-vous d'autres signes : essoufflement, troubles digestifs, fatigue intense, perte d'appétit ?"
+];
+const MOCK_SUMMARY  = "Tableau clinique évocateur d'une infection des voies respiratoires supérieures d'intensité modérée. Les symptômes rapportés (toux productive, fièvre modérée à 38.2°C, rhinorrhée) sont compatibles avec une rhinopharyngite aiguë d'origine virale probable. Aucun signe de gravité immédiate identifié à ce stade.";
+const MOCK_INTERIM  = "• Repos et hydratation abondante (1,5 à 2 L/j)\n• Antipyrétiques si T° > 38,5°C — paracétamol 1g × 3/j\n• Surveiller l'évolution — consultation rapide si aggravation\n• Éviter l'automédication antibiotique";
+const MOCK_SYMPTOMS = ["toux productive","fièvre 38.2°C","rhinorrhée","fatigue modérée"];
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+async function mockStart() { await delay(1100); return { thread_id:"demo-"+Math.random().toString(36).slice(2,8), status:"questioning", current_question:MOCK_Q[0], question_index:0 }; }
+async function mockResume(isPhysician) {
+  await delay(950);
+  if (isPhysician) return { status:"completed" };
+  APP.qIndex++;
+  if (APP.qIndex < 5) return { status:"questioning", current_question:MOCK_Q[APP.qIndex], question_index:APP.qIndex };
+  return { status:"awaiting_physician", diagnostic_summary:MOCK_SUMMARY, interim_care:MOCK_INTERIM, extracted_symptoms:MOCK_SYMPTOMS };
+}
+async function mockGetState()  { await delay(400); return { diagnostic_summary:MOCK_SUMMARY, interim_care:MOCK_INTERIM, extracted_symptoms:MOCK_SYMPTOMS }; }
+async function mockGetReport(n){ await delay(1300); return { final_report:`RAPPORT D'ORIENTATION CLINIQUE PRÉLIMINAIRE\n${"─".repeat(44)}\nDate : ${new Date().toLocaleDateString("fr-FR")}\n\nSYNTHÈSE\nRhinopharyngite aiguë virale probable. Évolution favorable attendue.\n\nTRAITEMENT PRESCRIT\n${n}\n\nSUIVI : Réévaluation dans 5 à 7 jours.\n${"─".repeat(44)}\nCe rapport est généré par OrientaMed — usage académique uniquement.\nIL NE REMPLACE PAS UNE CONSULTATION MÉDICALE RÉELLE.`, diagnostic_summary:MOCK_SUMMARY, interim_care:MOCK_INTERIM, extracted_symptoms:MOCK_SYMPTOMS, physician_notes:n }; }
+
+async function isBackendUp() { try { const r = await fetch(`${API_BASE}/health`,{signal:AbortSignal.timeout(2500)}); return r.ok; } catch { return false; } }
+async function apiPost(path, body) { const r = await fetch(`${API_BASE}${path}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||`Erreur ${r.status}`); } return r.json(); }
+async function apiGet(path)       { const r = await fetch(`${API_BASE}${path}`); if (!r.ok) throw new Error(`Erreur ${r.status}`); return r.json(); }
+
+function goTo(n) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("s"+n).classList.add("active");
+  APP.screen = n;
+  for (let i=1;i<=4;i++) {
+    const c=document.getElementById("sc"+i), l=document.getElementById("sl"+i);
+    c.className="step-circle"; l.className="step-label";
+    if (i<n)    { c.classList.add("done");   c.textContent="✓"; }
+    else if(i===n){ c.classList.add("active"); l.classList.add("active"); c.textContent=i; }
+    else          { c.textContent=i; }
+    const ln=document.getElementById("line"+i);
+    if (ln) ln.className="step-line"+(i<n?" done":"");
+  }
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function showError(m) { document.getElementById("error-msg").textContent=m; document.getElementById("error-banner").style.display="flex"; }
+function closeError()  { document.getElementById("error-banner").style.display="none"; }
+function setBtnLoading(id,on,label) { const b=document.getElementById(id); if(!b)return; b.disabled=on; b.innerHTML=on?`<span class="spin"></span> Chargement…`:label; }
+
+function addBubble(role,text) {
+  const win=document.getElementById("chat-window");
+  const d=document.createElement("div"); d.className=`bubble ${role}`;
+  d.innerHTML=`<span class="bubble-author">${role==="agent"?"🩺 Agent Diagnostic":"👤 Patient"}</span><p>${esc(text)}</p>`;
+  win.appendChild(d); win.scrollTop=win.scrollHeight;
+}
+function addTyping() {
+  const win=document.getElementById("chat-window");
+  const d=document.createElement("div"); d.className="bubble agent typing"; d.id="typing";
+  d.innerHTML=`<span class="bubble-author">🩺 Agent Diagnostic</span><p><span class="spin"></span> Analyse en cours…</p>`;
+  win.appendChild(d); win.scrollTop=win.scrollHeight;
+}
+function removeTyping() { const t=document.getElementById("typing"); if(t)t.remove(); }
+
+function updateProgress(n) {
+  document.getElementById("q-num").textContent=Math.min(n+1,5);
+  for (let i=1;i<=5;i++) { const d=document.getElementById("qdot"+i); d.className="q-dot"+(i-1<n?" done":i-1===n?" current":""); }
+}
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function buildTags(arr,id,cls="symptom-tag") { const el=document.getElementById(id); if(!el)return; el.innerHTML=""; (arr||[]).forEach(s=>{const sp=document.createElement("span");sp.className=cls;sp.textContent=s;el.appendChild(sp);}); }
+
+/* ── SCREEN 1 ── */
+async function startConsultation() {
+  closeError();
+  const patientCase=document.getElementById("p-case").value.trim();
+  if (patientCase.length<10) { showError("Veuillez décrire vos symptômes (minimum 10 caractères)."); return; }
+  setBtnLoading("start-btn",true,"Démarrer la consultation →");
+  try {
+    const up=await isBackendUp(); APP.isMock=!up;
+    if (APP.isMock) document.getElementById("mock-badge").style.display="flex";
+    const age=document.getElementById("p-age").value;
+    const gender=document.getElementById("p-gender").value;
+    const history=document.getElementById("p-history").value.trim().split(",").map(s=>s.trim()).filter(Boolean);
+    const meds=document.getElementById("p-meds").value.trim().split(",").map(s=>s.trim()).filter(Boolean);
+    const body={ patient_case:patientCase, patient_info:{ age:age?parseInt(age):null, gender:gender||null, medical_history:history, current_medications:meds } };
+    const data=APP.isMock?await mockStart():await apiPost("/consultation/start",body);
+    APP.threadId=data.thread_id; APP.qIndex=data.question_index||0;
+    document.getElementById("thread-display").textContent=data.thread_id.slice(0,10)+"…";
+    document.getElementById("thread-pill").style.display="flex";
+    goTo(2); updateProgress(APP.qIndex);
+    addBubble("agent",data.current_question||MOCK_Q[0]);
+    document.getElementById("chat-input").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAnswer();} });
+  } catch(err) { showError(err.message); }
+  finally { setBtnLoading("start-btn",false,"Démarrer la consultation →"); }
+}
+
+/* ── SCREEN 2 ── */
+async function sendAnswer() {
+  closeError();
+  const inp=document.getElementById("chat-input"), text=inp.value.trim();
+  if (!text) return;
+  inp.value=""; inp.disabled=true; document.getElementById("send-btn").disabled=true;
+  addBubble("patient",text); addTyping();
+  try {
+    const data=APP.isMock?await mockResume(false):await apiPost(`/consultation/${APP.threadId}/resume`,{answer:text});
+    removeTyping();
+    const status=data.status||"";
+    if (status==="questioning"&&data.current_question) {
+      APP.qIndex=data.question_index??APP.qIndex+1;
+      addBubble("agent",data.current_question); updateProgress(APP.qIndex);
+    } else if (status==="awaiting_physician") {
+      await loadPhysician(data);
+    } else {
+      const st=APP.isMock?await mockGetState():await apiGet(`/consultation/${APP.threadId}`);
+      if (st.status==="awaiting_physician"||st.is_diagnosis_complete) await loadPhysician(st);
+      else if (st.current_question) { APP.qIndex=st.current_question_index??APP.qIndex+1; addBubble("agent",st.current_question); updateProgress(APP.qIndex); }
+    }
+  } catch(err) { removeTyping(); showError(err.message); }
+  finally { inp.disabled=false; document.getElementById("send-btn").disabled=false; inp.focus(); }
+}
+
+/* ── SCREEN 3 ── */
+async function loadPhysician(existing=null) {
+  goTo(3);
+  try {
+    const data=existing?.diagnostic_summary?existing:APP.isMock?await mockGetState():await apiGet(`/consultation/${APP.threadId}`);
+    document.getElementById("summary-text").textContent=data.diagnostic_summary||"Synthèse en cours de génération…";
+    buildTags(data.extracted_symptoms||[],"symptoms-list");
+    if (data.interim_care) { const box=document.getElementById("interim-box"); box.style.display="block"; box.innerHTML=`<strong style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:#184EA8;margin-bottom:10px">💊 Recommandation intermédiaire</strong>${esc(data.interim_care)}`; }
+  } catch { document.getElementById("summary-text").textContent="Erreur de chargement — saisissez votre conduite à tenir."; }
+}
+
+async function submitPhysician(validated) {
+  closeError();
+  const notes=document.getElementById("physician-notes").value.trim();
+  if (!notes) { showError(validated?"Saisissez le traitement prescrit avant de valider.":"Saisissez votre feedback avant de refuser."); return; }
+  const btnId=validated?"validate-btn":"refuse-btn";
+  const label=validated?"✅ Valider et générer le rapport":"↩ Refuser — demander une correction";
+  setBtnLoading(btnId,true,label); APP.lastNotes=notes;
+  try {
+    APP.isMock?await mockResume(true):await apiPost(`/consultation/${APP.threadId}/resume`,{physician_validation:validated,physician_notes:notes});
+    if (!validated) { document.getElementById("chat-window").innerHTML=""; APP.qIndex=0; goTo(2); addBubble("agent",`Le médecin demande une correction : "${notes}". Reprenons le diagnostic.`); }
+    else await loadReport();
+  } catch(err) { showError(err.message); }
+  finally { setBtnLoading(btnId,false,label); }
+}
+
+/* ── SCREEN 4 ── */
+async function loadReport() {
+  goTo(4); document.getElementById("rep-thread").textContent=APP.threadId;
+  try {
+    const data=APP.isMock?await mockGetReport(APP.lastNotes):await apiGet(`/consultation/${APP.threadId}/report`);
+    document.getElementById("rep-summary").textContent  =data.diagnostic_summary ||"—";
+    document.getElementById("rep-interim").textContent  =data.interim_care       ||"—";
+    document.getElementById("rep-physician").textContent=data.physician_notes    ||APP.lastNotes||"—";
+    document.getElementById("rep-final").textContent    =data.final_report       ||"—";
+    buildTags(data.extracted_symptoms||[],"rep-symptoms");
+  } catch(err) { showError("Impossible de charger le rapport : "+err.message); }
+}
+
+/* ── RESTART ── */
+function restart() {
+  APP={screen:1,threadId:null,qIndex:0,isMock:false,lastNotes:""};
+  ["p-case","p-age","p-history","p-meds","physician-notes"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  document.getElementById("p-gender").value="";
+  document.getElementById("summary-text").textContent="Chargement…";
+  document.getElementById("interim-box").style.display="none";
+  document.getElementById("symptoms-list").innerHTML="";
+  document.getElementById("chat-window").innerHTML="";
+  document.getElementById("thread-pill").style.display="none";
+  document.getElementById("mock-badge").style.display="none";
+  closeError(); goTo(1);
+}
+</script>
+</body>
+</html>
