@@ -61,7 +61,7 @@ Le tout est exposé via une **API FastAPI**, intégré avec le protocole **MCP**
 
 <br/>
 
-**Encadrant :** Pr. Mohamed YOUSSFI · ENSET · 2025–2026
+**Encadrant :** Pr. Mohamed YOUSSFI · HESTIM · 2025–2026
 
 <br/>
 
@@ -469,7 +469,7 @@ langgraph dev
 
 <br/>
 
-Made with ❤️ — Groupe 4 · ENSET · 2025–2026
+Made with ❤️ — Groupe 4 · HESTIM · 2025–2026
 
 **Pr. Mohamed YOUSSFI**
 
