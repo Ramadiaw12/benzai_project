@@ -26,4 +26,6 @@ class MedicalState(TypedDict):
     requires_physician_review: bool
     physician_validation: Optional[bool]
     physician_notes: Optional[str]
-    errors: Annotated[List[str], operator.add]     
+    errors: Annotated[List[str], operator.add] 
+    diagnostic_summary: Optional[str]
+    interim_care: Optional[str]    
