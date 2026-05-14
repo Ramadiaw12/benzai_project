@@ -4,6 +4,18 @@ from typing import Literal
 from langgraph.graph import StateGraph, START, END
 from state import MedicalState
 
+
+# [CORRECTION E3] — MemorySaver obligatoire pour interrupt() (HITL)
+from langgraph.checkpoint.memory import MemorySaver
+ 
+# Import du state partagé — MedicalState de Stécy
+from app.state import MedicalState
+ 
+# [CORRECTION E3] — Imports corrects pour la structure du projet
+from app.nodes.physician_review import physician_review_node
+from app.nodes.report_agent     import report_agent_node
+from app.nodes.diagnostic_agent import diagnostic_agent_node
+ 
 # ==========================================
 # 1. LOGIQUE DE ROUTAGE 
 # ==========================================
@@ -50,47 +62,72 @@ def diagnostic_node(state: MedicalState) -> dict:
 
 def physician_node(state: MedicalState) -> dict:
     """
-    [Espace Étudiant 3] - Médecin & Rapport (Human-in-the-Loop)
-    Ce nœud attendra une validation via 'physician_review.py'
-    puis générera le rapport final.
+    [ÉTUDIANT 3] — Médecin & Rapport (Human-in-the-Loop)
+ 
+    Ce nœud appelle physician_review_node() implémenté dans physician_review.py.
+    Il remplace la simulation de l'Étudiant 1 par le vrai HITL LangGraph.
+ 
+    Fonctionnement :
+        1. physician_review_node() présente le dossier au médecin
+        2. Le graphe s'interrompt (interrupt()) et attend la saisie
+        3. Après reprise, physician_validation est mis à jour dans le state
+        4. router_after_physician() route vers report_agent ou diagnostic_agent
     """
     print("--- PASSAGE PAR LA REVUE MÉDECIN (Étudiant 3) ---")
-    # Simulation de validation
-    return {"physician_validation": True}
+ 
+    # [ÉTUDIANT 3] Appel du vrai nœud physician_review au lieu de la simulation
+    return physician_review_node(state)
 
 # ==========================================
-# 3. CONSTRUCTION DU GRAPHE
+# 3. CONSTRUCTION DU GRAPHE (Stécy — structure inchangée)
 # ==========================================
-
-# Initialisation du graphe avec votre structure d'état unique
+ 
 workflow = StateGraph(MedicalState)
-
-# Ajout des nœuds de traitement
+ 
+# Ajout des nœuds
 workflow.add_node("diagnostic_agent", diagnostic_node)
-workflow.add_node("physician_review", physician_node)
-
-# Définition du point d'entrée
+workflow.add_node("physician_review",  physician_node)
+workflow.add_node("report_agent",      report_agent_node)  # [Étudiant 3]
+ 
+# Point d'entrée
 workflow.add_edge(START, "diagnostic_agent")
-
-# Ajout des routes conditionnelles (C'est votre pilotage)
+ 
+# Routes conditionnelles
 workflow.add_conditional_edges(
     "diagnostic_agent",
     router_after_diagnostic,
     {
-        "diagnostic_agent": "diagnostic_agent", # Boucle pour les 5 questions
-        "physician_review": "physician_review", # Redirection vers le médecin
+        "diagnostic_agent": "diagnostic_agent",  # Boucle 5 questions
+        "physician_review": "physician_review",  # Vers le médecin
         "end": END
     }
 )
-
+ 
+# [CORRECTION E3] — "report_agent" ajouté dans le mapping
 workflow.add_conditional_edges(
     "physician_review",
     router_after_physician,
     {
-        "diagnostic_agent": "diagnostic_agent", # Retour à la case départ si refusé
-        "end": END
+        "diagnostic_agent": "diagnostic_agent",  # Refus → retour diagnostic
+        "report_agent":     "report_agent",      # Validation → rapport final
     }
 )
-
-# Compilation du graphe
-app = workflow.compile()
+ 
+# [CORRECTION E3] — report_agent → END
+workflow.add_edge("report_agent", END)
+ 
+ 
+# ==========================================
+# 4. COMPILATION
+# ==========================================
+ 
+# [CORRECTION E3] — MemorySaver obligatoire pour interrupt() dans physician_review
+memory = MemorySaver()
+ 
+# [CORRECTION E3] — Exporté comme orientamed_graph (importé par api.py)
+# Stécy avait : app = workflow.compile()
+# On garde les deux noms pour compatibilité
+orientamed_graph = workflow.compile(checkpointer=memory)
+app              = orientamed_graph   # Alias — compatibilité avec le code de Stécy
+ 
+print(" Graphe OrientaMed compilé.")
