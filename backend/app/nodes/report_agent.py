@@ -1,3 +1,4 @@
+# DIAWANE - Etudiant 3 — Génération du rapport final structuré
 """
 ===============================================================
 OrientaMed — report_agent.py

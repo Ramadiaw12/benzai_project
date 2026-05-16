@@ -1,3 +1,4 @@
+# DIAWANE - Etudiant 3 — API FastAPI
 """
 ===============================================================
 OrientaMed — api.py
@@ -37,7 +38,7 @@ import uuid
 from dotenv import load_dotenv
 from typing import Optional, List
 
-# ⚠️ load_dotenv() AVANT tout import LangChain/OpenAI
+# load_dotenv() AVANT tout import LangChain/OpenAI
 # graph.py instancie le LLM au chargement — il a besoin de OPENAI_API_KEY
 load_dotenv()
 
@@ -58,7 +59,7 @@ app = FastAPI(
     title="OrientaMed API",
     description=(
         "Système multi-agents d'orientation clinique préliminaire.\n\n"
-        "⚠️ Ce système ne remplace pas une consultation médicale.\n"
+        " Ce système ne remplace pas une consultation médicale.\n"
         "Projet académique — Pr. Mohamed YOUSSFI"
     ),
     version="1.0.0",
